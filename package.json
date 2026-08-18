@@ -1,0 +1,9 @@
+{
+  "name": "ramonas-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx serve public",
+    "deploy": "npx wrangler pages deploy public --project-name=ramonas-portfolio"
+  }
+}
