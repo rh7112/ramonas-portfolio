@@ -4,6 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx serve public",
-    "deploy": "npx wrangler pages deploy public --project-name=ramonas-portfolio"
+    "deploy": "npx wrangler deploy"
   }
 }
