@@ -1,5 +1,6 @@
 name = "ramonas-portfolio"
 compatibility_date = "2026-08-18"
+workers_dev = false
 
 [assets]
 directory = "./public"
