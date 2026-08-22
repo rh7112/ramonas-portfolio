@@ -1,6 +1,7 @@
 name = "ramonas-portfolio"
 compatibility_date = "2026-08-18"
 workers_dev = false
+account_id = "7ceef36ac9912fb68e8b31dc4634db5b"
 
 [assets]
 directory = "./public"
