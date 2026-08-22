@@ -210,11 +210,21 @@ section h2 .rule {
 }
 
 /* Beyond the clinic */
+/* Fixed column counts (rather than auto-fit/minmax) so the last row is
+   never left half-empty -- each breakpoint's column count evenly divides
+   the current tile count (15). If the tile count changes, re-check these
+   still divide evenly. */
 .hobby-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.25rem;
   margin-top: 1rem;
+}
+
+@media (max-width: 720px) {
+  .hobby-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .hobby-card {
@@ -307,5 +317,8 @@ footer.contact p.lead {
   }
   header.hero h1 {
     font-size: 1.7rem;
+  }
+  .hobby-grid {
+    grid-template-columns: 1fr;
   }
 }
