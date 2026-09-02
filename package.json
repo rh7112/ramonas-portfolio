@@ -5,5 +5,8 @@
   "scripts": {
     "dev": "npx serve public",
     "deploy": "npx wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.128.0"
   }
 }

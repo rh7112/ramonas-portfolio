@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery Admin — Ramona Bauch, PA-C</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* Admin-only page -- kept out of style.css since none of this applies
+       to the public site itself. Reuses style.css's CSS custom properties
+       for color so it still looks like part of the same site. */
+    body {
+      padding: 2rem 1.25rem 4rem;
+    }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.25rem;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    form {
+      background: var(--cream-dark);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--sage-dark);
+      margin-bottom: 0.35rem;
+    }
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #d8ccb4;
+      border-radius: 8px;
+      font: inherit;
+      background: var(--cream);
+      color: var(--charcoal);
+      margin-bottom: 1.1rem;
+    }
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: -0.8rem 0 1.1rem;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      padding: 0.7rem 1.6rem;
+      background: var(--sage);
+      color: var(--cream);
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #preview {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 8px;
+      margin-bottom: 1.1rem;
+      display: none;
+    }
+    #status {
+      margin-top: 0.9rem;
+      font-size: 0.9rem;
+    }
+    #status.error {
+      color: #b3413a;
+    }
+    #status.success {
+      color: var(--sage-dark);
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .photo-card {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--cream-dark);
+    }
+    .photo-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-card .tags {
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 0.4rem 0.5rem;
+    }
+    .photo-card .delete-btn {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.4rem;
+      background: rgba(58, 53, 47, 0.75);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
+      font-size: 0.95rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Gallery Admin</h1>
+    <p class="hint">Upload, tag, and remove photos from Ramona's gallery.</p>
+
+    <form id="upload-form">
+      <label for="photo">Photo</label>
+      <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required />
+      <img id="preview" alt="Selected photo preview" />
+
+      <label for="tags">Tags</label>
+      <input id="tags" type="text" list="tag-suggestions" placeholder="e.g. fairy houses, gardening" />
+      <datalist id="tag-suggestions"></datalist>
+      <p class="field-hint">Comma-separated. Start typing to see tags used before.</p>
+
+      <button type="submit">Upload</button>
+      <p id="status"></p>
+    </form>
+
+    <div id="photo-grid" class="photo-grid"></div>
+  </main>
+
+  <script>
+    const MAX_DIMENSION = 2000;
+    const JPEG_QUALITY = 0.85;
+
+    const form = document.getElementById('upload-form');
+    const photoInput = document.getElementById('photo');
+    const preview = document.getElementById('preview');
+    const tagsInput = document.getElementById('tags');
+    const tagSuggestions = document.getElementById('tag-suggestions');
+    const statusEl = document.getElementById('status');
+    const grid = document.getElementById('photo-grid');
+
+    let allTags = new Set();
+
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      if (!file) {
+        preview.style.display = 'none';
+        return;
+      }
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    });
+
+    // Downscales/re-encodes client-side before upload -- phone photos are
+    // large, and there's no server-side resize pipeline (see the plan:
+    // deliberately skipped Cloudflare Images/a Wasm resize step for what's
+    // confirmed to be low-volume, casual use).
+    function resizeImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+            const scale = MAX_DIMENSION / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function setStatus(message, kind) {
+      statusEl.textContent = message;
+      statusEl.className = kind || '';
+    }
+
+    function renderTagSuggestions() {
+      tagSuggestions.innerHTML = '';
+      for (const tag of [...allTags].sort()) {
+        const option = document.createElement('option');
+        option.value = tag;
+        tagSuggestions.appendChild(option);
+      }
+    }
+
+    function renderGrid(photos) {
+      grid.innerHTML = '';
+      for (const photo of photos) {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+
+        const img = document.createElement('img');
+        img.src = photo.url;
+        img.alt = photo.tags.join(', ') || 'Untagged photo';
+        card.appendChild(img);
+
+        const tagsEl = document.createElement('div');
+        tagsEl.className = 'tags';
+        tagsEl.textContent = photo.tags.join(', ') || '(no tags)';
+        card.appendChild(tagsEl);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '×';
+        deleteBtn.setAttribute('aria-label', 'Delete photo');
+        deleteBtn.addEventListener('click', () => deletePhoto(photo.key));
+        card.appendChild(deleteBtn);
+
+        grid.appendChild(card);
+      }
+    }
+
+    async function loadGallery() {
+      const res = await fetch('/api/gallery');
+      const data = await res.json();
+      allTags = new Set(data.photos.flatMap((p) => p.tags));
+      renderTagSuggestions();
+      renderGrid(data.photos);
+    }
+
+    async function deletePhoto(key) {
+      if (!confirm('Delete this photo?')) return;
+      await fetch(`/api/admin/gallery/${encodeURIComponent(key)}`, { method: 'DELETE' });
+      await loadGallery();
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const file = photoInput.files[0];
+      if (!file) return;
+
+      const submitBtn = form.querySelector('button');
+      submitBtn.disabled = true;
+      setStatus('Uploading…');
+
+      try {
+        const image = await resizeImage(file);
+        const tags = tagsInput.value
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+        const res = await fetch('/api/admin/gallery/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image, tags })
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? 'Upload failed');
+        }
+
+        form.reset();
+        preview.style.display = 'none';
+        setStatus('Uploaded!', 'success');
+        await loadGallery();
+      } catch (err) {
+        setStatus(err.message || 'Something went wrong.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    loadGallery();
+  </script>
+</body>
+</html>
