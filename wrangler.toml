@@ -1,7 +1,13 @@
 name = "ramonas-portfolio"
+main = "worker/index.js"
 compatibility_date = "2026-08-18"
 workers_dev = false
 account_id = "7ceef36ac9912fb68e8b31dc4634db5b"
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+
+[[r2_buckets]]
+binding = "GALLERY"
+bucket_name = "ramona-gallery-photos"

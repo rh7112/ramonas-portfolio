@@ -270,6 +270,60 @@ section h2 .rule {
   color: #eaf1e6;
 }
 
+/* Gallery */
+.gallery-intro {
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+}
+
+.gallery-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tag-chip {
+  font: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--sage);
+  background: var(--cream);
+  color: var(--sage-dark);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+.tag-chip.active {
+  background: var(--sage);
+  color: var(--cream);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-item {
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--cream-dark);
+}
+
+.gallery-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
 /* Contact / footer */
 footer.contact {
   text-align: center;

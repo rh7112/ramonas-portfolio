@@ -56,6 +56,7 @@
       <li><a href="#education">Education</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#life">Beyond the Clinic</a></li>
+      <li><a href="#gallery">Gallery</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </nav>
@@ -278,6 +279,16 @@
         </div>
       </div>
     </section>
+
+    <section id="gallery">
+      <div class="wrap">
+        <h2>Gallery<span class="rule"></span></h2>
+        <p class="gallery-intro">A few favorites -- fairy houses, garden beds, and whatever else is in progress.</p>
+        <div id="gallery-tags" class="gallery-tags"></div>
+        <div id="gallery-grid" class="gallery-grid"></div>
+        <p id="gallery-empty" class="gallery-empty" hidden>No photos yet -- check back soon.</p>
+      </div>
+    </section>
   </main>
 
   <footer class="contact" id="contact">
@@ -294,6 +305,68 @@
   <p class="site-footer">&copy; 2026 Ramona Bauch, PA-C</p>
 
   <hurd-footer></hurd-footer>
+
+  <script>
+    (function () {
+      const tagsEl = document.getElementById('gallery-tags');
+      const gridEl = document.getElementById('gallery-grid');
+      const emptyEl = document.getElementById('gallery-empty');
+      let photos = [];
+      let activeTag = null;
+
+      function render() {
+        const filtered = activeTag ? photos.filter((p) => p.tags.includes(activeTag)) : photos;
+
+        gridEl.innerHTML = '';
+        for (const photo of filtered) {
+          const fig = document.createElement('figure');
+          fig.className = 'gallery-item';
+          const img = document.createElement('img');
+          img.src = photo.url;
+          img.alt = photo.tags.join(', ') || 'Photo from Ramona';
+          img.loading = 'lazy';
+          fig.appendChild(img);
+          gridEl.appendChild(fig);
+        }
+        emptyEl.hidden = filtered.length > 0;
+      }
+
+      function renderTags() {
+        const allTags = [...new Set(photos.flatMap((p) => p.tags))].sort();
+        tagsEl.innerHTML = '';
+        if (allTags.length === 0) return;
+
+        const makeChip = (label, tag) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'tag-chip' + (activeTag === tag ? ' active' : '');
+          chip.textContent = label;
+          chip.addEventListener('click', () => {
+            activeTag = activeTag === tag ? null : tag;
+            renderTags();
+            render();
+          });
+          return chip;
+        };
+
+        tagsEl.appendChild(makeChip('All', null));
+        for (const tag of allTags) {
+          tagsEl.appendChild(makeChip(tag, tag));
+        }
+      }
+
+      fetch('/api/gallery')
+        .then((res) => (res.ok ? res.json() : { photos: [] }))
+        .then((data) => {
+          photos = data.photos || [];
+          renderTags();
+          render();
+        })
+        .catch(() => {
+          emptyEl.hidden = false;
+        });
+    })();
+  </script>
 
 </body>
 </html>
