@@ -1,0 +1,24 @@
+name: Lighthouse CI
+
+# Reports performance/accessibility/best-practices/SEO scores on PRs so
+# regressions are visible before merge. Informational only (doesn't block
+# merges) until there is a baseline to set score thresholds against.
+
+on:
+  pull_request:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./.lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
