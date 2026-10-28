@@ -1,0 +1,18 @@
+name: CI
+
+# Validates the Worker config and assets (no deploy).
+# Runs on pull requests so a broken build shows up on the PR instead of
+# after merge. Deploy is deploy.yml.
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - run: npx --yes wrangler@4 deploy --dry-run
