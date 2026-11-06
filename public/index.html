@@ -291,6 +291,7 @@
       <div class="contact-buttons">
         <a class="btn primary" href="mailto:rbauch890@icloud.com">Email Ramona</a>
         <a class="btn" href="tel:15742532093">Call (574) 253-2093</a>
+        <button type="button" class="btn" id="download-resume">Download resume (PDF)</button>
       </div>
     </div>
   </footer>
@@ -298,6 +299,25 @@
   <p class="site-footer">&copy; 2026 Ramona Bauch, PA-C</p>
 
   <hurd-footer tagline="Ramona Bauch"></hurd-footer>
+
+  <script>
+    // "Download resume (PDF)": opens the browser's Save-as-PDF with the print
+    // stylesheet (style.css @media print), which turns this page into a
+    // resume, so the PDF can never drift from the page. The title becomes the
+    // suggested file name.
+    (function () {
+      var btn = document.getElementById("download-resume");
+      if (!btn) return;
+      var original = document.title;
+      btn.addEventListener("click", function () {
+        document.title = "Ramona-Bauch-Resume";
+        window.print();
+      });
+      window.addEventListener("afterprint", function () {
+        document.title = original;
+      });
+    })();
+  </script>
 
 </body>
 </html>
