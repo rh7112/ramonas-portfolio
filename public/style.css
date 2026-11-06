@@ -322,3 +322,19 @@ footer.contact p.lead {
     grid-template-columns: 1fr;
   }
 }
+
+/* Print / Save-as-PDF: turns the page into a one-column resume. Used by the
+   "Download resume (PDF)" button; hides everything that is not resume content
+   (navigation, personal "Beyond the Clinic" section, contact footer, shared footer). */
+@media print {
+  @page { margin: 0.6in; }
+  body { background: #fff; color: #000; font-size: 11pt; line-height: 1.4; }
+  .subnav, #life, footer.contact, .site-footer, hurd-footer, .avatar { display: none !important; }
+  header.hero { background: none; padding: 0 0 8pt; text-align: left; border-bottom: 1px solid #999; }
+  header.hero h1, header.hero .tagline, .contact-row a { color: #000; }
+  .contact-row { justify-content: flex-start; }
+  section { padding: 10pt 0 0; }
+  section h2 { break-after: avoid; }
+  section h3, section li { break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+}
